@@ -3,8 +3,10 @@ title: Pix2PixHD
 date: 2020-11-09
 image: pix2pix_arch.webp
 description: 图像翻译的经典论文
-categories: 
-    - 论文笔记
+categories:
+  - 论文笔记
+tags:
+  - 图像翻译
 ---
 ## Pix2PixHD
 
@@ -17,35 +19,37 @@ categories:
 
 ### Architecture
 pix2pix：使用 UNet generator + patch-based discriminator，输出 256x256，直接输出高分辨率的话不稳定且质量低，于是进行改良。  
-1. Coarse-to-fine generator
+#### Coarse-to-fine generator
 ![arch](pix2pix_arch.webp)
 
-G1 为 global generator 处理 1024x512 图像，G2 为 local enhancer 处理 2048x1024 图像，同样的可以扩增出 G3 等等  
-G1 采用架构为：https://arxiv.org/abs/1603.08155 ，其中提到的两个 Perceptual Loss Functions  
+G1 为 global generator 处理 1024x512 图像，G2 为 local enhancer 处理 2048x1024 图像，同样的可以扩增出 G3 等等。
+
+G1 采用架构为： https://arxiv.org/abs/1603.08155 ，其中提到的两个 Perceptual Loss Functions。
 <div align=center>
 <img src="FeatureReconstructionLoss.webp" width="50%">  
 <img src="StyleReconstructionLoss.webp" width="50%"> 
 </div>
 
-2. Multi-scale discriminators  
-  高分辨率需要大的感受野，而更大的卷积核或者更深的网络会有潜在过拟合的可能，且内存增长也很大。于是采用图像金字塔，对输入图缩小几次，得出几种尺度的图像，再根据缩放次数建立多个相同架构的 discriminators 来分别处理各自尺度（Patched Base），最后综合起来得出结果
+#### Multi-scale discriminators  
+高分辨率需要大的感受野，而更大的卷积核或者更深的网络会有潜在过拟合的可能，且内存增长也很大。于是采用图像金字塔，对输入图缩小几次，得出几种尺度的图像，再根据缩放次数建立多个相同架构的 discriminators 来分别处理各自尺度（Patched Base），最后综合起来得出结果
   
-3. Feature matching loss  
+#### Feature matching loss  
   <div align=center>
   <img src="FeatureMatchingLoss.webp" width="60%">  
   </div>
-  使用各个 discriminator 各层特征的 L1 loss 来让生成图像和真实图像在判别器特征层面上相似，这可以说是类似 Perceptual Loss（在超分辨率和风格迁移很有用的方法）。实验进一步表明，一起使用会有更多提升  
-  结合 Feature matching loss 和 GAN loss，得到最终的 loss： 
+使用各个 discriminator 各层特征的 L1 loss 来让生成图像和真实图像在判别器特征层面上相似，这可以说是类似 Perceptual Loss（在超分辨率和风格迁移很有用的方法）。实验进一步表明，一起使用会有更多提升。
+  
+结合 Feature matching loss 和 GAN loss，得到最终的 loss： 
   
   <div align=center>
   <img src="FinalLoss.webp" width="60%">  
   </div>
 
-4. Instance maps  
-  为了解决 semantic label 无法区分物体的缺点，需要引入 instance maps，但是由于事先不确定 instance 个数，所以不好实现。基于此，作者指出 boundary 才是其中最重要的信息，先计算出 instance boundary map（四邻域里有不同的 label 则为 1，否则为 0），再 concat 一起送入 generator 和 discriminator
+#### Instance maps  
+为了解决 semantic label 无法区分物体的缺点，需要引入 instance maps，但是由于事先不确定 instance 个数，所以不好实现。基于此，作者指出 boundary 才是其中最重要的信息，先计算出 instance boundary map（四邻域里有不同的 label 则为 1，否则为 0），再 concat 一起送入 generator 和 discriminator
   
-5. Image manipulation  
-  为了使 manipulation 结果多样化且合理，加入 instance-level feature embedding，和 semantic label 一起作为 generator 输入。具体来说，需要额外训练一个 encoder-decoder，最后一层按 instance 进行平均池化，再将池化结果 broadcast 到 instance 每个像素。这样处理完整个训练集后，对各类别使用 K-means 就可以得出多种 instance feature，推理时随机选取一种 concat 输入进行 generate 就可以完成目的。encoder-decoder 的具体训练方法见论文 3.4。
+#### Image manipulation  
+为了使 manipulation 结果多样化且合理，加入 instance-level feature embedding，和 semantic label 一起作为 generator 输入。具体来说，需要额外训练一个 encoder-decoder，最后一层按 instance 进行平均池化，再将池化结果 broadcast 到 instance 每个像素。这样处理完整个训练集后，对各类别使用 K-means 就可以得出多种 instance feature，推理时随机选取一种 concat 输入进行 generate 就可以完成目的。encoder-decoder 的具体训练方法见论文 3.4。
 
 ### Implementation Notes
 1. 先训练 G1 再训练 G2，最后合在一起 fine-tune，作者提到此多分辨率 pipeline 易于建立，而且一般两种尺度就足够了
@@ -60,6 +64,7 @@ G1 采用架构为：https://arxiv.org/abs/1603.08155 ，其中提到的两个 P
   <div align=center>
   <img src="exp2.webp" width="70%">  
   </div>
+  
   - 非限制 loss 比较，GAN + Feature matching + VGG Perceptual loss 比上单独 GAN loss、GAN + Feature matching loss 的 preference rate 分别为 68.55%，58.90%，稍微有一些提升，但不是很明显
 
 _还剩下了几个实验，但这些实际效果都存疑，其实作用都不是特别明显，实验有些偏颇，generator 和 loss 方面的提升应该是最明显的_

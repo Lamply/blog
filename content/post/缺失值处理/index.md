@@ -1,8 +1,9 @@
 ---
 title: 如何处理含nan值的光流图像
 date: 2023-04-06
-categories: 
-    - 技术经验
+categories:
+  - 技术经验
+image: flow_nan.webp
 ---
 ## 迭代更新双线性插值
 

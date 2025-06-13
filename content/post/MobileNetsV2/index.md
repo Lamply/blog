@@ -3,12 +3,11 @@ title: MobileNet V2
 date: 2018-03-01
 math: true
 categories:
-    - 论文笔记
+  - 论文笔记
+description: 这是关于轻量级网络 MobileNet 的改进版论文，作为万众瞩目的高效率骨干网络架构，它的更新意味着移动端网络的又一次改进。
 ---
-这是关于轻量级网络 MobileNet 的改进版论文，作为万众瞩目的高效率骨干网络架构，它的更新意味着移动端网络的又一次改进。
 
 原文链接： [Inverted Residuals and Linear Bottlenecks: Mobile Networks for Classification, Detection and Segmentation](https://arxiv.org/pdf/1801.04381.pdf)
-<!--more-->
 
 ## Main Contribution
 inverted residual with linear bottleneck. 输入低维压缩表征, 扩增到高维并进行 depthwise 卷积, 再通过线性卷积投射回低维表征.    
