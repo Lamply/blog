@@ -2,13 +2,14 @@
 title: Python
 date: 2024-03-09
 description: 人生苦短，我用 Python
-categories: 
-    - 技术简介
+categories:
+  - 技术简介
+  - 问题记录
 ---
 
-解释型语言，运行时通过特定解释器来解释并运行。一般官方使用的解释器是 CPython，也就是底层使用 C 实现，另外大部分第三方库（像 Numpy）也都是以 CPython 调用为目的来实现的。  
+解释型语言，运行时通过特定解释器来解释并运行。一般官方使用的解释器是 CPython，也就是底层使用 C 实现，另外大部分第三方库（像 Numpy）也都是以 CPython 调用为目的来实现的。
 
-在 `import` 库时会生成带解释器信息后缀的字节码（常为 `__pycache__/*.cpython-36.pyc`）以避免太多重复编译，可以通过 `export PYTHONDONTWRITEBYTECODE=1` 来避免生成字节码，`find . -type f -name "*.py[co]" -delete -or -type d -name "__pycache__" -delete` 来删除这些文件。  
+在 `import` 库时会生成带解释器信息后缀的字节码（常为 `__pycache__/*.cpython-36.pyc`）以避免太多重复编译，可以通过 `export PYTHONDONTWRITEBYTECODE=1` 来避免生成字节码，`find . -type f -name "*.py[co]" -delete -or -type d -name "__pycache__" -delete` 来删除这些文件。
 
 ![running](running.webp)
 
@@ -37,6 +38,9 @@ python setup.py install
 pip install xxx
 pip install -e .    # 不安装 wheel，而是引用源代码目录，用于开发时即时使用修改的代码
 pip install -e .[full]   # 安装 extras_require 版本
+
+pip install xxx==x.x.x  # 制定版本
+pip install xxx~=x.x.x  # 安装兼容的最新版本，一般是小版本能取新版，和 ^ 类似
 ```
 
 一般安装的路径是 `/usr/local/lib/pythonx.x/dist-packages`，但一些自己编译的 python 库可能会安装到 `/usr/lib/pythonx.x/site-packages` 下，只是为了区分库的来源而已，在普遍使用虚拟环境的现在似乎没什么意义，可以手动移动库统一放到 `dist-packages` 里
@@ -64,7 +68,15 @@ xxxxxxx = xxxxx    # noqa
 ```
 
 ### Formatter
-自动格式化工具，使用 Black 可以不需要配置
+自动格式化工具，最广泛使用的是 Black，也可以用 Ruff 集成的，基本一样，Ruff 的配置多一些
+```shell
+ruff format                   # Format all files in the current directory.
+ruff format path/to/code/     # Format all files in `path/to/code` (and any subdirectories).
+ruff format path/to/file.py   # Format a single file.
+```
+
+问题：
+1. `unindent does not match any outer indentation level`：空格缩进和 tab 混用了
 
 ### 单元测试
 测试的单元要尽可能小而且独立，函数命名采用尽可能长的功能描述性名字
@@ -114,7 +126,7 @@ Python 文件一般分为包和模块，编写脚本并且导入相应的包或�
 - 绝对导入：`import xxx` 或者 `from xxx import xxx`
 - 相对导入：`from .xxx import xxx`，可以有多个前导点，但不提倡。通过模块属性 `__name__` 或者 `__package__` （若有）来定位位置
 	- Python 的相对导入做得相对恶心，你无法在使用了相对导入的模块里加入 `if __name__ == '__main__':` 来保存模块测试代码，因为这样会被视作顶层文件（`__name__` 被设置为 `__main__`，而 `__package__` 被设置为 `None`），从而缺失路径无法完成相对导入
-	- 使用 `python -m` 运行可以让 `__package__` 被设置为当前文件夹，运行一定程度的相对导入
+	- 使用 `python -m` 运行可以让 `__package__` 被设置为当前文件夹，运行一定程度的相对导入。`-m` 参数是让 python 搜索 `sys.path` 寻找模块（不需要后缀 `.py`）然后运行
 
 对包的内部，推荐使用相对导入，以便对包进行维护。对于运行的脚本，则必须使用绝对导入
 
@@ -206,7 +218,10 @@ test(1, 2)
 test(a=1, 2)
 ```
 
-\*args 保存函数输入多出来的参数，\*\*kwargs 保存使用键-值方式输入的多余参数，同时使用时 \*\*kwargs 要在 \*args 后面
+`*args` 保存函数输入多出来的参数，`**kwargs` 保存使用键-值方式输入的多余参数，同时使用时 `**kwargs` 要在 `*args` 后面。
+
+`*` 为解包符号，单个使用时为将容器元素解开来一一送进函数（作为位置参数），两个使用时为字典键对应的值送进函数（作为键值参数，字典单个解包符则是送 keys 进去）。
+
 ```python
 def test(*args,**kwargs):
     print(args)
@@ -324,6 +339,9 @@ sum(2,3)
 
 # 想要 a b 独立，应当
 a.append(list(b))
+
+# 或者拿出元素来建立 a
+a.append(b[:])
 ```
 
 可变对象作为入参时，函数默认参数只会运算一次，不会每次调用都重新运算：  
@@ -362,7 +380,7 @@ a = [ i**2 for i in range(10) if i > 3 ]
 a = [b for i in a for b in i]
 ```
 
-如果只是要遍历列表，应该采用迭代器，可以避免过多的内容加载
+如果只是要遍历列表，应该采用迭代器，可以避免过多的内容加载。可以用生成器表达式来完成（也就是换成小括号）
 ```python
 # python 3.x
 filtered_values = (i**2 for i in range(10) if i > 3)
@@ -564,7 +582,10 @@ Python 主要采用引用计数，辅以 标记-清理 和分代回收策略。
 `getattr(object, name[, default])`：同上，属于按属性名索引
 
 ### 多线程与多进程
+GIL（Global Interpreter Lock）：由于 Python 使用引用计数来进行内存管理，如果多线程不互斥则可能出现大问题，于是引入了 GIL 作为互斥锁
+
 多线程 `threading`，多进程 `multiprocessing`。由于 Python 一般使用 CPython 作为解释器，而 CPython 有 GIL 的存在（一时间只能一核在跑），所以无法在 Python 层面实施真正的多线程。如果同步和通信问题不是很严重，使用多进程会不错，每个进程会有一个 GIL，但不会互相影响
+
 ```python
 # 多进程下 numpy 种子可能相同，随机函数或种子设置应采用 python 的 random
 import random
@@ -592,6 +613,7 @@ if __name__ == '__main__':
     pool.close()
     pool.join()
 ```
+
 需要注意的是，不能多个进程对同一全局变量做修改（在各个进程中似乎会拷贝一份全局变量进去，然后每个进程都有一个仅对自己进程可见的全局变量，最终修改的结果也只影响拷贝的变量，不会改变主进程的全局变量）  
 如需共享资源使用  `Multiprocessing.Queue`、`Multiprocessing.Array`、`Multiprocessing.Manager` 
 
@@ -698,6 +720,10 @@ finally:
 
 # 断言，用 python -O 执行可忽略
 assert(xxx == 'asd')
+
+# 想要重新尝试一定次数再报错则可以使用 retrying 的装饰器
+import retrying
+@retrying.retry(stop_max_attempt_number=5, wait_fixed=1000)
 ```
 
 https://dzone.com/articles/fail-fast-principle-in-software-development
@@ -709,13 +735,12 @@ import dis
 dis.dis(func)
 ```
 
-### 正则表达式
+### 正则表达式/字符串处理
 使用 re 模块
 ```python
 import re
 # 因为 re 的输入 pattern 需要符合正则表达式规则，而正则表达式和 ASCII 的转义字符部分冲突
-# 所以需要在 pattern string 前加上 r 表示 raw string 不处理转义字符得到原始字符，用于
-# 正则匹配 
+# 所以需要在 pattern string 前加上 r 表示 raw string 不处理转义字符得到原始字符，用于正则匹配 
 res = re.match(r'model\.stage\d\.', key)
 
 # 与上面同结果的另一种写法，稍高效些
@@ -724,6 +749,9 @@ result = prog.match(key)
 
 # 将 key 中符合 prog pattern 的字符串替换成 xx
 prog.sub('xx', key)
+
+# 去除非英文字母、数字、空格的字符
+re.sub('[^a-zA-Z0-9 ]', '', s)
 
 # 转义字符
 re.escape(' vv/n ')  # '\ vv/n\ '
@@ -759,7 +787,7 @@ Unicode 则是统一多种语言的字符集，每个字符对应四字节内的
 对于 `a.encode("ascii", "xmlcharrefreplace")` 还有第二个参数，可以提供无法被相应规则编码的情况下的对策。  
 _注：字符串标志 `r'xxx'` 表明用原始字符不转义（比如换行用”反斜杠+n“表示），`f'xxx{a:.2f}'` 表明 f-string，字符串内可以用大括号来引入外部变量，`b'xxx'` 表明是 bytes 对象_
 
-更多资料：https://pycoders-weekly-chinese.readthedocs.io/en/latest/issue5/unipain.html
+更多资料： https://pycoders-weekly-chinese.readthedocs.io/en/latest/issue5/unipain.html
 
 转换方法汇总如下：
 ```python
@@ -793,7 +821,12 @@ print(f"{s1:<15}")               # 左对齐占 15 字符，最好将不能对�
 ```python
 re.escape('x.out.')
 # > 'x\\.out\\.'
+```
 
+字符数字互转：
+```python
+ord('0')  # 返回 Unicode 码点，48
+chr(48)   # 返回 Unicode 字符，'0'
 ```
 
 编码错误问题：
@@ -833,11 +866,14 @@ v2 = Version("1.0")
 
 ### 环境变量
 - __PYTHONHOME__：表示 python 标准库的前缀路径，默认系统库为 `/usr/`
-  > Change the location of the standard Python libraries. By default, the libraries are searched in prefix/lib/pythonversion and exec_prefix/lib/pythonversion, where prefix and exec_prefix are installation-dependent directories, both defaulting to /usr/local.  
-When PYTHONHOME is set to a single directory, its value replaces both prefix and exec_prefix. To specify different values for these, set PYTHONHOME to prefix:exec_prefix.
+  > Change the location of the standard Python libraries. By default, the libraries are searched in prefix/lib/pythonversion and exec_prefix/lib/pythonversion, where prefix and exec_prefix are installation-dependent directories, both defaulting to /usr/local. 
+    > When PYTHONHOME is set to a single directory, its value replaces both prefix and exec_prefix. To specify different values for these, set PYTHONHOME to prefix:exec_prefix.
 - __PYTHONPATH__：python 模块索引路径，可以在 `sys.path` 中查看和修改，添加索引时常用的环境变量
 
 如果要在脚本中临时插入环境变量，可选择 `os.environ['PYTHONPATH']='path'`，如果不好使那就 `sys.path.insert(0, 'path')`
+
+### JIT 和 AOT
+Python 3.13 版本后更新了 JIT，也就是可以在运行时翻译字节码成机器码来执行，相比于传统的每次都解释字节码并执行的方式要快。
 
 ## 计算
 对性能要求较高的计算情况下可以考虑别的库，比如 Taichi 之类的
@@ -974,8 +1010,10 @@ print (a[...,1:])  # axis 3 的第 2 个及以后 [2,8,5,4]
   -17 % -10 = -7
   ```
 
+取余和取模有点不同，取余结果符号只和被除数有关，Python 的是取模
+
 ### 取整
-- `a // b`：注意，如果 a 是浮点数，b 是整型数，取整结果会是浮点数，需要转换类型
+- `a // b`：注意，如果 a 是浮点数，b 是整型数，取整结果会是浮点数，需要转换类型， __符号相反的取整会向下取整__ 也就是 `-44 // 10 == -5`
 
 ### 截取
 - `np.clip(a, min, max)`：有些库会叫 `clamp`
@@ -1144,6 +1182,7 @@ Python 的字典是哈希表的实现，字典的键需要是不可变类型（�
 
 
 ### 时间
+- 获取当前日期可以用 `time.strftime("%Y-%m-%d %H:%M:%S")`
 - 一般情况下使用平台默认的计时，返回秒
   ```python
   from timeit import default_timer as timer
@@ -1239,6 +1278,93 @@ print(result)
 
 关键在于使用进程池来异步处理每个操作，需要确保每个进程的操作是独立的
 
+### 爬虫自动化
+主要使用 Selenium 和 BeautifulSoup 等库来处理页面
+
+```python
+from selenium import webdriver
+from bs4 import BeautifulSoup
+from selenium.webdriver.common.action_chains import ActionChains
+
+# 启动浏览器
+options = webdriver.FirefoxOptions()
+driver = webdriver.Firefox(options=options)
+
+# 打开页面
+driver.get(link)
+
+# 获取页面信息
+soup = BeautifulSoup(driver.page_source, "lxml")
+
+# 查找元素
+button = driver.find_element(By.ID, "review_language_all")
+elem_1 = driver.find_element('xpath','//p[@class="app-title"]')
+
+# 执行点击动作
+driver.execute_script("arguments[0].click()", button)
+```
+
+#### 页面滚动/等待
+```python
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions
+
+# 滚动到顶部
+driver.execute_script("window.scrollTo(0, 0);")
+# 滚动到页面底部
+driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+# 显式等待，等待时间设置为10秒钟，每0.5秒检查，直到 'q' 元素可见
+wait = WebDriverWait(driver, 10, 0.5).until(expected_conditions.visibility_of_element_located((By.NAME, "q")))  # 
+
+# 显示等待2，等待 ID 元素出现
+element_present = expected_conditions.presence_of_element_located((By.ID, "elementID"))
+WebDriverWait(driver, 10).until(element_present)
+
+#滚动到特定元素
+#特定元素element，是定位的位置，可以是文字，也可以是具体某个下拉框，选择框等等；
+driver.execute_script("arguments[0].scrollIntoView(true);", element)
+```
+
+#### 悬停
+```python
+# 最好先点击再悬停，不然可能会因为光标问题而失效
+hover = ActionChains(driver).click_and_hold(elem).release().move_to_element(elem)
+hover.perform()
+```
+
+#### 滑动条/滑块
+```python
+# 范围滑条需要定位两个handle
+slider = driver.find_element(By.ID, "app_reviews_playtime_slider")
+handles = slider.find_elements(By.CLASS_NAME, "ui-slider-handle")
+left_handle = handles[0]
+right_handle = handles[1]
+
+# 计算滑动的像素，由于存在截断情况，精细操控时必须整体划分像素，还要加上检查
+slider_width = slider.size["width"]
+offsets = np.int32(np.trunc(np.linspace(0, slider_width, 101))).tolist()
+current_percent, target_percent = 12, 50
+offset = offsets[target_percent] - offsets[current_percent]
+
+# 模拟点击、移动、释放鼠标操作
+drag_action = lambda offset: ActionChains(driver).click_and_hold(left_handle).move_by_offset(offset, 0).release().perform()
+drag_slider(offset)
+
+# 检查是否移动到位，要根据具体情况实现 get_current_percent
+current_percent = get_current_percent()
+while current_percent != target_percent:
+    if current_percent < target_percent:
+        offset += 1
+        drag_slider(offset)
+        current_percent = get_current_percent()
+    elif current_percent > target_percent:
+        offset -= 1
+        drag_slider(offset)
+        current_percent = get_current_percent()
+    time.sleep(random.random())
+```
+
 
 ## 库
 ### collections
@@ -1250,7 +1376,26 @@ a = 'eabcdabcdabcaba'
 c = collections.Counter(a)  # {'e': 1, 'a': 5, 'b': 4, 'c': 3, 'd': 2}
 # 提供前 n 个高频出现的元素
 c.most_common(3)  # [('a', 5), ('b', 4), ('c', 3)]
+```
 
+### itertools
+迭代相关的工具库
+```python
+for i, j in product(range(10), range(10)):
+# 相当于
+# for i in range(10):
+#   for j in range(10):
+    pass
+
+```
+
+### bisect
+二分查找的库，是查找插入点而不是搜索值，只用到 `__lt__()` 方法
+
+```python
+# a = [1,2,3,4]
+bisect.bisect_right(a, 3)  # return 3, same as bisect.bisect(a, 3)
+bisect.bisect_left(a, 3)  # return 2
 ```
 
 ### Numpy
@@ -1347,9 +1492,20 @@ plt.show()
 # 带类别颜色的散点图
 plt.scatter(data[:,0], data[:,1], c=colors)  # color 为 0-1, RGB [n,3] 或 [1,3]
 ```
-问题：
+
+#### 打印所有支持的字体
+```python
+from matplotlib import font_manager
+
+a= sorted([f.name for f in font_manager.fontManager.ttflist])
+for i in a:
+    print(i)
+```
+
+#### 问题
 - `UserWarning: Glyph 25151 (\N{CJK UNIFIED IDEOGRAPH-623F}) missing from current font`：中文不能正确显示，通过找中文字体 `fc-list :lang=zh family`，然后设置 `plt.rcParams['font.family'] = ['中文字体', 'sans-serif']` 替换就行
 - `Font family ['Noto Sans CJK'] not found`： 接上文，则 `sudo apt install msttcorefonts -qq` + `rm ~/.cache/matplotlib -rf`，然后使用如 `plt.rcParams['font.family'] = ['WenQuanYi Micro Hei']`
+- 如果安装了字体也找不到就只能手动添加到 matplotlib 的缓存中 `font_manager.fontManager.addfont('xxx.ttf')`，或者直接修改 `~/.cache/matplotlib/fontlist-v330.json 添加目标字体`
 
 ### seaborn
 matplotlib 上层库
@@ -1387,6 +1543,7 @@ g.despine(left=True)
 g.set_axis_labels("", "value")
 g.legend.set_title("")
 ```
+
 问题：
 - `missing from current font`：问题同 matplotlib 需要 `sns.set_theme(rc={"font.family": "WenQuanYi Micro Hei"})`
 
@@ -1450,6 +1607,7 @@ for result in pool.imap_unordered(func, sites):
       - https://github.com/ipython/ipython/issues/10493
   - `pip install -e .` 安装的库 jupyter 用不了：安装到了 `/usr/lib/python3.9/site-packages/` 中导致，移到 `/usr/local/lib/python3.9/dist-packages/` 下就行
   - `LD_LIBRARY_PATH` 和终端不同？ 见 [[Python#坑]] 13.
+  - 进不去 jupyter-notebook，终端反馈 `403 GET`：关掉 caddy 再过一段时间就好了，可能和 caddy 代理有关
   
 
 ### logging
@@ -1666,54 +1824,89 @@ s1.isnull()         # 判断 nan 值
 
 
 # 从 csv 中创建
-data = pd.read_csv(file_path) 
+df = pd.read_csv(file_path) 
 
 # 从 python 或 numpy 数组创建，columns 描述属性信息
-data = pd.DataFrame(array, columns=['name', 'score'])
+df = pd.DataFrame(array, columns=['name', 'score'])
 
 # 从 Series 中创建
-data = pd.DataFrame([s1,s2,s3])
+df = pd.DataFrame([s1,s2,s3])
 
-data.iloc[0]        # 整数下标索引
+df.iloc[0]        # 整数下标索引
 
-data.describe()     # 得到基本描述，第一行 count 为非缺省值个数
-                    # 25% (50%, 75%同): 
-                    # 大于所有数据的25%的数，小于75%的数 的数值
+df.describe()     # 得到基本描述，第一行 count 为非缺省值个数
+                  # 25% (50%, 75%同): 
+                  # 大于所有数据的25%的数，小于75%的数 的数值
                   
-data.head()         # 取头几个数据
-data.xxx==5         # 取出属性 xxx 值为 5 的所有数据
-data['xxx']==5      # 同上
-data[data['xxx'].isin(xxx_list)]   # 通过元素是否在列表中来筛选
+df.head()         # 取头几个数据
+df.xxx==5         # 取出属性 xxx 值为 5 的所有数据
+df['xxx']==5      # 同上
+df[df['xxx'].isin(xxx_list)]   # 通过元素是否在列表中来筛选
 
-data.sort_values(by=['xxx','yyy'])         # 根据 xxx 和 yyy 的值排序，有先后
-    
-data[(data['xxx']-data['yyy']).abs() < 2]   # 可以做一些基本运算
+df.sort_values(by=['xxx','yyy'])         # 根据 xxx 和 yyy 的值排序，有先后
 
 ## 增加一维 size 用于统计去除重复的行
-data.groupby(data.columns.tolist(),as_index=False).size()
+df.groupby(df.columns.tolist(),as_index=False).size()
 
 ## concat MxJ 和 MxK，得到 Mx(J+K)
 pd.concat([df1, df2], axis=1)
 
 ## 按给定的列表排序 https://www.cnblogs.com/lemonbit/p/7004505.html
-data['xxx'] = all_ratings['xxx'].astype('category')
-data['xxx'].cat.reorder_categories(sort_name, inplace=True)  # 似乎 deprecated 了
-data.sort_values('xxx', inplace=True)
+df['xxx'] = all_ratings['xxx'].astype('category')
+df['xxx'].cat.reorder_categories(sort_name, inplace=True)  # 似乎 deprecated 了
+df.sort_values('xxx', inplace=True)
 
 ## 列排序
-data = data.reindex(sorted(data.columns), axis=1)
-
-## 切片
-data[12:33]                           # row index 会从 12 开始
-data[12:33].reset_index(drop=True)    # row index 会从 0 开始
-
-## 转换
-data['params'].apply(pd.Series)       # 逐个处理 params 列，转为新的 DataFrame
+df = df.reindex(sorted(df.columns), axis=1)
 ```
 
 处理 excel 表格，首先要安装 `openpyxl`，然后 `xxx = pd.read_excel('xxx.xlsx')`
 
-问题：
+#### 切片
+```python
+# 行切片
+df[12:33]                           # row index 会从 12 开始
+df[12:33].reset_index(drop=True)    # row index 会从 0 开始
+
+df[['col1', 'col3']]                # 支持选定列切片
+
+# 中括号内支持一些运算，产生的逻辑数组用于切片
+df[(df['xxx']-df['yyy']).abs() < 2]   # 可以做一些基本运算
+
+# 挑出某行，apply 遍历，生成 bool 数组
+mask = df.loc['genres'].apply(lambda lst: genre in lst)
+# 在列维度应用 bool 数组切片
+filtered_df = df.loc[:, mask]
+```
+
+#### 增删
+```python
+# 可以直接 del 某列
+del df['col']
+```
+
+#### 遍历
+```python
+def func(s1: pd.Series) -> pd.Series:
+    return s1
+
+# 能够对每个列数据进行遍历处理，未返回则设置为 None
+df.apply(func(s1))
+```
+
+
+#### 保存读取
+```python
+# 默认会保存 index，一般没这个必要
+df.to_csv(file_path, index=False)
+
+# 和 json.dumps 相比有一些不同
+# 1. / -> \/ 的转义
+# 2. `:` 后缺少一个空格缩进
+df.to_json(file_path, indent=4, force_ascii=False)
+```
+
+#### 问题
 1. `ArrowInvalid: ("Could not convert '2.71' with type str: tried to convert to int64", 'Conversion failed for column params with type object')`： `to_feather()` 时出现的错误，原因是数据里有 list 元素类型不统一，也就是说混合数据的 object 是不允许的，每个元素都必须是同类型。迷惑设计，我都用 object 了，还会在意这个？ https://github.com/wesm/feather/issues/349 https://github.com/pandas-dev/pandas/issues/21228 ^3f4b47
     - 采用 `.astype({'b': str})` 将混合类型的 `b` 列改为 `str` 类型似乎可以解决？ 
 
@@ -1785,11 +1978,15 @@ def run():
 13. `ModuleNotFoundError: No module named "xxx"`：可能是因为当前目录下有个 xxx 库，所以 import 了错误的库导致
 14. `jupyter-notebook` 环境变量不同步：通过 `jupyter kernelspec list` 找到 kernel 配置目录（`/usr/local/share/jupyter/kernels/python3/kernel.json`），修改 `kernel.json`，添加一行 `"env": {"LD_LIBRARY_PATH":""}` 来设置环境变量
 15. `ModuleNotFoundError: No module named '_ctypes'`：经典错误，原因未明。如果装 `libffi-dev` 无法解决则需要重装 python
-16. `super(type, obj): obj must be an instance or subtype of type`：Jupyter Notebook 重载模块的神奇错误，重启 kernel 就行
+16. `super(type, obj): obj must be an instance or subtype of type`：Jupyter Notebook 重载模块的神奇错误，重启 kernel 就行，或者将修改了的类的初始化改为 `super().__init__()`
 17. `Error: Failed to find a python interpreter in the .data section`：`py-spy` 问题，似乎 `py-spy record -o pro.svg -- python xxx.py` 就没问题，原因不明
 18. pip 安装用了很长时间，可以通过加 --verbose 来看看在做什么 `pip install xxx --verbose`
 19. `RET_CHECK failure (tensorflow/compiler/xla/service/gpu/gpu_compiler.cc:618) dnn != nullptr`：cuDNN 版本错误，删掉旧的 `dpkg -P` 以及可能的 `pip uninstall nvidia-cudnn-cu11`，要看 cudnn 用的什么方式安装
 20. `wandb: ERROR api_key not configured (no-tty). call wandb.login(key=[your_api_key])`，wandb 库是联网的 dashboard，命令行输入 `wandb offline` 切换成本地版本免去 api_key
 21. `ERROR: Could not find a version that satisfies the requirement tb-nightly`：pip 库安装问题，可能是镜像源没有该库，更换镜像源或使用官方源
 22. `gradio` 502 bad gateway 错误：本地部署需要设置为 `0.0.0.0` 或设置域名来监听网络请求，而不是 `127.0.0.1` 本地还回
-23. notebook 极度卡顿，py-spy 显示卡在 autoreload 的 `update_instances` 中：
+23. notebook 极度卡顿，py-spy 显示卡在 autoreload 的 `update_instances` 中
+24. pip 安装出现 `WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken`：pip 源出了问题，换一个就行
+25. `'gbk' codec can't encode character`：写入文件时出错，windows 默认用 gbk 保存，改成指定用 utf-8，`open('test.html', 'w+', encoding='utf-8')`
+26. `UnicodeDecodeError: 'gbk' codec can't decode byte 0xae in position 2954: illegal multibyte sequence`：notebook autoreload 问题，同样是 Windows gbk 编码导致，python 3.7 以上版本可以设置环境变量 `PYTHONUTF8=1` 来解决
+27. pip 安装其他 numpy 版本出现 `NameError: name 'CCompiler' is not defined. Did you mean: 'ccompiler'?`，似乎是版本太低导致的，可能和 setuptool 有关

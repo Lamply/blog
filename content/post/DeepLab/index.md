@@ -2,13 +2,11 @@
 title: DeepLab系列论文简略记录
 date: 2018-03-01
 categories:
-    - 论文笔记
+  - 论文笔记
 tags:
-    - 语义分割
+  - 语义分割
+description: 关于语义分割网络 DeepLab 系列的三篇论文。尽管经验性的技巧很多，但就效果而言还是很不错的，有不少值得参考的地方
 ---
-这部分是关于语义分割网络 DeepLab 系列的三篇论文。尽管经验性的技巧很多，但就效果而言还是很不错的，有不少值得参考的地方。
-<!--more-->
-
 ## DeepLab: Semantic Image Segmentation with Deep Convolutional Nets, Atrous Convolution, and Fully Connected CRFs
 
 三个贡献:  

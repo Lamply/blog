@@ -2,13 +2,11 @@
 title: Caffe使用问题记录
 date: 2018-08-07
 categories:
-    - 技术经验
-    - 问题记录
+  - 问题记录
 tags:
-    - caffe
+  - caffe
+description: 以往在使用 caffe 中遇到的部分问题记录
 ---
-以往在使用 caffe 中遇到的部分问题记录。
-<!--more-->
 
 ## 使用教程
 Caffe 一般通过编译生成的可执行文件 caffe（一般路径为 `$CAFFE_PATH/build/tools/caffe`）来进行网络训练和测试。

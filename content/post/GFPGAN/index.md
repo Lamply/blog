@@ -1,11 +1,11 @@
 ---
 title: GFPGAN尝试
 date: 2023-09-15
-image: GFPGAN1.webp
-categories: 
-    - 技术经验
-tags: 
-    - GAN
+image: 
+categories:
+  - 技术经验
+tags:
+  - GAN
 ---
 links: https://github.com/TencentARC/GFPGAN
 

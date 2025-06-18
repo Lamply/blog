@@ -4,13 +4,10 @@ date: 2017-11-15
 image: ForceRegularization.png
 math: true
 categories:
-    - 论文笔记
+  - 论文笔记
+description: 这篇论文是在学习压缩模型时无意中看到的，发表在 ICCV 2017。因为看到它的 motivation 觉得挺有意思的（昴星团瞩目），刚好还有代码，于是就学习了一下
 ---
-
-这篇论文是在学习压缩模型时无意中看到的，发表在 ICCV 2017。因为看到它的 motivation 觉得挺有意思的（昴星团瞩目），刚好还有代码，于是就学习了一下，顺带看看能不能用在项目上。  
-
 原文链接： [Coordinating Filters for Faster Deep Neural Networks](https://arxiv.org/abs/1703.09746)
-<!--more-->
 
 ## 原文理解
 - 压缩和加速 DNN 模型的工作
